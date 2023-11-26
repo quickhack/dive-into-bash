@@ -52,6 +52,16 @@ loop() {
 }
 
 ################################################################################
+# parse options
+################################################################################
+
+fast_mode=false
+if [[ $1 = -f || $1 = '--fast' ]]; then
+  fast_mode=true
+fi
+readonly fast_mode
+
+################################################################################
 # perform test logic
 ################################################################################
 
@@ -68,24 +78,26 @@ echo
 info_print "the time consumption of 100K time loop:"
 note_print "including the overhead of the bash runtime startup(1 instance)"
 time -p "$BASH" ./00-empty-loop-case.bash 100000
-note_print "by function, no new bash instance"
+note_print "call function, no new bash instance"
 time -p loop 100000 :
 note_print "embedded loop statement, no new bash instance"
 time -p for ((i = 0; i < 100000; i++)); do
   :
 done
 
-echo
+if ! $fast_mode; then
+  echo
 
-info_print "the time consumption of 1M time loop:"
-note_print "including the overhead of the bash runtime startup(1 instance)"
-time -p "$BASH" ./00-empty-loop-case.bash 1000000
-note_print "by function, no new bash instance"
-time -p loop 1000000 :
-note_print "embedded loop statement, no new bash instance"
-time -p for ((i = 0; i < 1000000; i++)); do
-  :
-done
+  info_print "the time consumption of 1M time loop:"
+  note_print "including the overhead of the bash runtime startup(1 instance)"
+  time -p "$BASH" ./00-empty-loop-case.bash 1000000
+  note_print "call function, no new bash instance"
+  time -p loop 1000000 :
+  note_print "embedded loop statement, no new bash instance"
+  time -p for ((i = 0; i < 1000000; i++)); do
+    :
+  done
+fi
 
 # - # - # - # - # - # - # - # - # - # - # - #
 
@@ -96,8 +108,11 @@ echo
 
 info_print "the time consumption of 100 time:"
 time -p loop 100 "$BASH" ./00-empty-bash-case.bash
-info_print "the time consumption of 1K time:"
-time -p loop 1000 "$BASH" ./00-empty-bash-case.bash
+
+if ! $fast_mode; then
+  info_print "the time consumption of 1K time:"
+  time -p loop 1000 "$BASH" ./00-empty-bash-case.bash
+fi
 
 # - # - # - # - # - # - # - # - # - # - # - #
 
@@ -108,8 +123,11 @@ echo
 
 info_print "the time consumption of 100K time:"
 time -p "$BASH" ./01-simple-assignment.bash 100000
-info_print "the time consumption of 1M time:"
-time -p "$BASH" ./01-simple-assignment.bash 1000000
+
+if ! $fast_mode; then
+  info_print "the time consumption of 1M time:"
+  time -p "$BASH" ./01-simple-assignment.bash 1000000
+fi
 
 # - # - # - # - # - # - # - # - # - # - # - #
 
@@ -120,8 +138,11 @@ echo
 
 info_print "the time consumption of 100K time:"
 time -p "$BASH" 10-param-expansion.bash 100000
-info_print "the time consumption of 1M time:"
-time -p "$BASH" 10-param-expansion.bash 1000000
+
+if ! $fast_mode; then
+  info_print "the time consumption of 1M time:"
+  time -p "$BASH" 10-param-expansion.bash 1000000
+fi
 
 # - # - # - # - # - # - # - # - # - # - # - #
 
@@ -132,5 +153,8 @@ echo
 
 info_print "the time consumption of 1K time:"
 time -p "$BASH" ./20-command-substitution.bash 1000
-info_print "the time consumption of 10K time:"
-time -p "$BASH" ./20-command-substitution.bash 10000
+
+if ! $fast_mode; then
+  info_print "the time consumption of 10K time:"
+  time -p "$BASH" ./20-command-substitution.bash 10000
+fi
